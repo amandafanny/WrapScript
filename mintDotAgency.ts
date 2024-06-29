@@ -31,6 +31,7 @@ import {
   formatUnits,
   parseUnits,
   encodePacked,
+  parseGwei,
 } from "viem";
 import { confirm } from "@inquirer/prompts";
 import {
@@ -563,11 +564,20 @@ const updateConfig = async (
 
 const getPriceNonce = async (gasX: string) => {
   const gasPrice = await publicClient.getGasPrice();
+  const gas = await publicClient.estimateContractGas({
+    account,
+    ...dotAgency,
+    functionName: "commit",
+  });
+  console.log("gas", gas);
   const { request, result } = await publicClient.simulateContract({
     account,
     ...dotAgency,
     functionName: "commit",
-    gasPrice: (gasPrice * parseUnits(gasX, 4)) / parseUnits("1", 4),
+    gas,
+    maxFeePerGas:
+      (gasPrice * parseUnits(gasX, 4)) / parseUnits("1", 4) + parseGwei("3"),
+    maxPriorityFeePerGas: parseGwei("3"),
   });
 
   const commitHash = await walletClient.writeContract(request);
@@ -597,13 +607,27 @@ const mintDotAgencyName = async (
   gasX: string
 ) => {
   const gasPrice = await publicClient.getGasPrice();
+
+  const gas = await publicClient.estimateContractGas({
+    account,
+    ...dotAgency,
+    value: price,
+    functionName: "mint",
+    args: [name, priceNonce],
+  });
+
+  console.log("gas", gas);
+
   const { request, result } = await publicClient.simulateContract({
     account,
     ...dotAgency,
     value: price,
     functionName: "mint",
     args: [name, priceNonce],
-    gasPrice: (gasPrice * parseUnits(gasX, 4)) / parseUnits("1", 4),
+    gas,
+    maxFeePerGas:
+      (gasPrice * parseUnits(gasX, 4)) / parseUnits("1", 4) + parseGwei("3"),
+    maxPriorityFeePerGas: parseGwei("3"),
   });
 
   const mintHash = await walletClient.writeContract(request);

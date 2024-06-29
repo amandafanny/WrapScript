@@ -7,6 +7,7 @@ import {
   rebaseFee,
   claimLockWrapCoin,
   renouncePush,
+  mintDotAgencyWithPriceNonce,
 } from "./mintDotAgency";
 import { approvePush } from "./utils/stake";
 import chalk from "chalk";
